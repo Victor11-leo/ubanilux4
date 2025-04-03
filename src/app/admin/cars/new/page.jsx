@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -23,7 +21,7 @@ export default function AddCarPage() {
   const [imageStorage, setImageStorage] = useState([])
 
   // Mock function to handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e) => {
     if (e.target.files && e.target.files.length > 0) {      
       const newImages = [...images]
       for (let i = 0; i < e.target.files.length; i++) {
