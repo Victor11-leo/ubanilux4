@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Upload } from "lucide-react"
+import { ArrowLeft, Loader, Upload } from "lucide-react"
 import { useMutation } from "convex/react"
 import { api } from "../../../../../convex/_generated/api"
 
@@ -18,38 +18,69 @@ export default function AddCarPage() {
   const createCar = useMutation(api.cars.createCar)
 
   const [images, setImages] = useState([])
-  const [imageStorage, setImageStorage] = useState([])
+  const [imageLoading, setImageLoading] = useState(false)
+  const [storageIds, setStorageIds] = useState([])
 
-  // Mock function to handle image upload
-  const handleImageUpload = (e) => {
-    if (e.target.files && e.target.files.length > 0) {      
-      const newImages = [...images]
+  const [name,setName] = useState('')
+  const [category,setCategory] = useState('')
+  const [price,setPrice] = useState(10)
+  const [status,setStatus] = useState('')
+  const [year,setYear] = useState(2008)
+  const [mileage,setMileage] = useState(5000)
+  const [fuelType,setFuelType] = useState('')
+  const [transmission,setTransmission] = useState('')
+  const [description,setDescription] = useState('')
+  const [seats,setSeats] = useState(4)
+  const [doors,setDoors] = useState(4)
+  
+
+  const handleImageUpload = async (e) => {
+    console.log(e.target.files);
+    setImageLoading(true)
+    const newImages = []
+    if (e.target.files) {      
       for (let i = 0; i < e.target.files.length; i++) {
-        newImages.push(e.target.files)
+        const image = e.target.files[i]
+        console.log(image.name);
+        const postUrl = await generateUploadUrl()
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": image.type},
+          body: image,
+        });
+        const { storageId } = await result.json();      
+        setStorageIds(storageIds => [...storageIds, storageId])
+        const urlSrc = URL.createObjectURL(image)        
+        setImages(images => [...images,urlSrc])
       }
-      setImages(newImages)
-    }
+    }    
+    setImageLoading(false)
   }
 
-  const handleUpload = async (e) => {
-    e.preventDefault()
-    const storageIds = []
-    for (let i= 0; i<images.length ;i++)
-    {
-      const postUrl = await generateUploadUrl()
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": images[i]},
-        body: images[i],
-      });
-      const { storageId } = await result.json();      
-      storageIds.push(storageId)
+  const handleFormSubmit = async (e) => {
+    e.preventDefault()  
+    const carDetails = {
+      name,
+      category,
+      price:Number(year),
+      status,
+      image:storageIds[0],
+      year:Number(year),
+      mileage:Number(year),
+      fuelType,
+      transmission,
+      seats:4,
+      doors:4,
+      description,
+      images:storageIds.length > 1 ? storageIds.slice(1) : '',
     }
-
-    // createCar({
-
-    // })
-
+    console.log(carDetails);
+    try {
+      createCar(carDetails)
+      console.log('created car');
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
   return (
@@ -75,11 +106,17 @@ export default function AddCarPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Car Name</Label>
-                <Input id="name" placeholder="e.g. Tesla Model 3" />
+                <Input id="name" placeholder="e.g. Tesla Model 3" 
+                onChange={(e) => {
+                  setName(e.target.value) 
+                }}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select>
+                <Select
+                onValueChange={(value) => setCategory(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -93,12 +130,19 @@ export default function AddCarPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price per Day ($)</Label>
-                <Input id="price" type="number" placeholder="e.g. 150" />
+                <Label htmlFor="price">Price per Day (Ksh)</Label>
+                <Input 
+                id="price" type="number" placeholder="e.g. 150" 
+                onChange={(e) => {
+                  setPrice(e.target.value) 
+                }}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select>
+                <Select
+                onValueChange={(value) => setStatus(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -111,15 +155,27 @@ export default function AddCarPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="year">Year</Label>
-                <Input id="year" type="number" placeholder="e.g. 2023" />
+                <Input 
+                id="year" type="number" placeholder="e.g. 2023" 
+                onChange={(e) => {
+                  setYear(e.target.value) 
+                }}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mileage">Mileage</Label>
-                <Input id="mileage" type="number" placeholder="e.g. 5000" />
+                <Input 
+                id="mileage" type="number" placeholder="e.g. 5000" 
+                onChange={(e) => {
+                  setMileage(e.target.value) 
+                }}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fuel">Fuel Type</Label>
-                <Select>
+                <Select
+                onValueChange={(value) => setFuelType(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select fuel type" />
                   </SelectTrigger>
@@ -133,7 +189,9 @@ export default function AddCarPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="transmission">Transmission</Label>
-                <Select>
+                <Select
+                onValueChange={(value) => setTransmission(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select transmission" />
                   </SelectTrigger>
@@ -149,6 +207,9 @@ export default function AddCarPage() {
               <Textarea
                 id="description"
                 placeholder="Enter car description and features..."
+                onChange={(e) => {
+                  setDescription(e.target.value) 
+                }}
                 className="min-h-[120px]"
               />
             </div>
@@ -166,18 +227,33 @@ export default function AddCarPage() {
                 ))}
                 <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed">
                   <div className="flex flex-col items-center gap-1 text-center">
-                    <Upload className="h-8 w-8 text-muted-foreground" />
-                    <Label
-                      htmlFor="image-upload"
-                      className="cursor-pointer text-sm font-medium text-primary hover:underline"
-                    >
-                      Upload Images
-                    </Label>
+                    {imageLoading ? 
+                    <div className="flex flex-col items-center gap-1 text-center">
+                      <Loader className="h-8 w-8 text-amber-400 animate-spin"/>
+                      <Label
+                        htmlFor="image-upload"
+                        className="cursor-pointer text-sm font-medium text-primary hover:underline"
+                      >
+                        Loading images
+                      </Label>
+                    </div>
+                    :
+                      <div className="flex flex-col items-center gap-1 text-center">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <Label
+                        htmlFor="image-upload"
+                        className="cursor-pointer text-sm font-medium text-primary hover:underline"
+                      >
+                        Upload Images
+                      </Label>
+                      </div>
+                    }
                     <Input
                       id="image-upload"
                       type="file"
                       accept="image/*"
                       multiple
+                      disabled={imageLoading}                      
                       className="hidden"
                       onChange={handleImageUpload}
                     />
@@ -191,7 +267,7 @@ export default function AddCarPage() {
             <Button variant="outline" asChild>
               <Link href="/admin/cars">Cancel</Link>
             </Button>
-            <Button>Add Car</Button>
+            <Button onClick={handleFormSubmit}>Add Car</Button>
           </CardFooter>
         </Card>
       </div>

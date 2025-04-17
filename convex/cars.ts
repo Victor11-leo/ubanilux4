@@ -12,16 +12,16 @@ export const createCar = mutation({
         v.literal("rented"),
         v.literal("maintenance"),
     ),
-    image: v.id("_storage"),
+    image: v.union(v.id("_storage"),v.string()),
     year: v.number(),
     mileage: v.number(),
     fuelType: v.string(),
     transmission: v.string(),
-    seats: v.number(),
-    doors: v.number(),
-    features: v.array(v.string()),
+    seats: v.optional(v.number()),
+    doors: v.optional(v.number()),
+    features: v.optional(v.array(v.string())),
     description: v.string(),
-    images: v.array(v.id("_storage")),
+    images: v.array(v.union(v.id("_storage"),v.string())),
   },
   handler: async (ctx, args) => {
     const newCarId = await ctx.db.insert("cars", 
@@ -52,7 +52,12 @@ export const fetchCars = query({
     .query("cars")
     .collect()
 
-    return cars
+    return Promise.all(
+      cars.map(async (car) => ({
+        ...car,
+        image:car.image.includes('https') ? car.image : await ctx.storage.getUrl(car.image),        
+      }))
+    )
   },
 });
 
@@ -65,8 +70,40 @@ export const fetchCarId = query({
       .query("cars")
       .filter((q) => q.eq(q.field("_id"),args.id))
       .first()
-  
-      return cars
+      
+      // const carFound = async () => ({
+      //   ...cars,
+      //   image:cars?.image.includes('https') ? cars.image : await ctx.storage.getUrl(cars?.image),        
+      //   images:cars?.images.map(async (d) => d.includes('https') ? d : await ctx.storage.getUrl(d))
+      // })      
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const getImageUrl = cars?.image.includes('https')
+            ? Promise.resolve(cars.image)
+            : ctx.storage.getUrl(cars?.image);
+    
+          const imagesPromise = Promise.all(
+            cars?.images.map(d =>
+              d.includes('https') ? Promise.resolve(d) : ctx.storage.getUrl(d)
+            )
+          );
+    
+          Promise.all([getImageUrl, imagesPromise])
+            .then(([imageUrl, resolvedImages]) => {
+              resolve({
+                ...cars,
+                image: imageUrl,
+                images: resolvedImages
+              });
+            })
+            .catch(reject);
+    
+        } catch (err) {
+          reject(err);
+        }
+      });
+
     },
 });
 

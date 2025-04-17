@@ -3,7 +3,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Car, Filter, Search } from "lucide-react"
 import { useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
@@ -14,8 +13,9 @@ import { useState } from "react"
 export default function UserCarsPage() {
   const [query,setQuery] = useState("")
   
-  const cars = useQuery(api.cars.fetchCars)  
-  if (cars == undefined) return null
+  const cars = useQuery(api.cars.fetchCars) 
+  console.log(cars); 
+  if (cars == undefined) return null  
 
   const filteredData = cars.filter((f) => f.name.toLowerCase().includes(query.toLowerCase()))  
   return (

@@ -12,6 +12,7 @@ import { api } from "../../../../../convex/_generated/api"
 import { useParams } from "next/navigation"
 import axios from "axios"
 import { SignedIn, SignedOut } from "@clerk/nextjs"
+import { features } from "process"
 
 export default function CarDetailsPage() {
   const [startDate, setStartDate] = useState("")
@@ -29,11 +30,7 @@ export default function CarDetailsPage() {
       amount:1
     }
     const response = await axios.post("/api/initiate-payment", JSON.parse(JSON.stringify(data)))
-    console.log(response);
-    if (response.data) {
-      const callbackRes = await axios.post("/api/payments")
-      console.log(callbackRes);     
-    }
+    
   }
   return (
     <>
@@ -50,10 +47,10 @@ export default function CarDetailsPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
             <div className="aspect-video overflow-hidden rounded-lg">
-              <img src={car.images[0] || "/placeholder.svg"} alt={car.name} className="h-full w-full object-cover" />
+              <img src={car.image || "/placeholder.svg"} alt={car.name} className="h-full w-full object-cover" />
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {car.images.slice(1).map((image, index) => (
+              {car.images.map((image, index) => (
                 <div key={index} className="aspect-video overflow-hidden rounded-lg">
                   <img
                     src={image || "/placeholder.svg"}
@@ -73,14 +70,16 @@ export default function CarDetailsPage() {
                 <p>{car.description}</p>
               </TabsContent>
               <TabsContent value="features" className="p-4 border rounded-lg mt-2">
-                <ul className="grid grid-cols-2 gap-2">
-                  {car.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-primary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                {features && (
+                  <ul className="grid grid-cols-2 gap-2">
+                    {car.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </TabsContent>
               <TabsContent value="specifications" className="p-4 border rounded-lg mt-2">
                 <div className="grid grid-cols-2 gap-4">
