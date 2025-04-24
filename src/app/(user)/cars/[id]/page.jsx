@@ -6,19 +6,23 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar, Car, Check, CreditCard, Fuel, Gauge, Info, Phone, Settings, Users } from "lucide-react"
+import { ArrowLeft, Calendar, Car, Check, CreditCard, Fuel, Gauge, Info, Loader, Phone, Settings, Users } from "lucide-react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../../convex/_generated/api"
 import { useParams } from "next/navigation"
 import axios from "axios"
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs"
 import { features } from "process"
+import { toast } from "sonner"
+
 
 export default function CarDetailsPage() {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [phone, setPhone] = useState("")
   const router = useParams()
+
+  const [isLoading,setIsLoading] = useState(false)
 
   const {user} = useUser()
   
@@ -33,11 +37,12 @@ export default function CarDetailsPage() {
   }
 
   const handlePayment = async () => {
+    setIsLoading(true)
     const data = {
       phoneNumber:phone,
       amount:1
     }
-    // await axios.post("/api/initiate-payment", JSON.parse(JSON.stringify(data)))
+    await axios.post("/api/initiate-payment", JSON.parse(JSON.stringify(data)))
     await wait(2500)
 
     const bookingDetails = {
@@ -45,12 +50,14 @@ export default function CarDetailsPage() {
       carId:car?._id,
       startDate:startDate,
       endDate:endDate,
-      status:'upcoming',
+      status:'pending',
       paymentStatus:"paid"
     }
 
-    const res = await createBooking(bookingDetails)
-    console.log(res);
+    const res = await createBooking(bookingDetails)    
+    if (res) toast.success("Successful booking")
+    else toast.error("There was an error. Try again later",{description:"Developer check logs"})
+    setIsLoading(false)
   }
   return (
     <>
@@ -239,8 +246,11 @@ export default function CarDetailsPage() {
               <CardFooter>
                 <SignedIn>
                   <Button onClick={handlePayment} className="w-full" disabled={!startDate || !endDate || !phone  } >                  
+                    {isLoading ? <Loader className='animate-spin'/> : <>
                       <CreditCard className="mr-2 h-4 w-4" />
                       Book Now                  
+                    </>
+                    }
                   </Button>
                 </SignedIn>
               </CardFooter>

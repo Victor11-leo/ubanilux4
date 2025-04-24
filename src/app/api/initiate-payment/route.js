@@ -53,7 +53,7 @@ export async function POST(req) {
         PartyB: shortcode,
         PhoneNumber: `254${formattedPhone}`,
         CallBackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/`,
-        AccountReference: "ArdhiKwanza",
+        AccountReference: "Ubanilux",
         TransactionDesc: "Payment for services",
       },
       {

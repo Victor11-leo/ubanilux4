@@ -48,18 +48,13 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
       title: "My Bookings",
       href: "/bookings",
       icon: Calendar,
-    },
-    {
-      title: "Payments",
-      href: "/payments",
-      icon: CreditCard,
     },    
   ]
 
   const adminNavItems = [
     {
       title: "Dashboard",
-      href: "/admin/dashboard",
+      href: "/admin",
       icon: Home,
     },
     {
@@ -76,27 +71,7 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
       title: "Users",
       href: "/admin/users",
       icon: Users,
-    },
-    {
-      title: "Payments",
-      href: "/admin/payments",
-      icon: CreditCard,
-    },
-    {
-      title: "Reports",
-      href: "/admin/reports",
-      icon: BarChart,
-    },
-    {
-      title: "Messages",
-      href: "/admin/messages",
-      icon: MessageSquare,
-    },
-    {
-      title: "Settings",
-      href: "/admin/settings",
-      icon: Settings,
-    },
+    },    
   ]
 
   const navItems = isAdmin ? adminNavItems : userNavItems

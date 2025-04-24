@@ -1,8 +1,68 @@
+'use client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/global/dashboard-layout"
 import { BarChart, Car, CreditCard, DollarSign, Users } from "lucide-react"
+import { useQuery } from "convex/react"
+import { api } from "../../../convex/_generated/api"
+import { useEffect, useState } from "react"
+import RevenueChart from '@/components/global/RevenueChart'
+
+
+function formatRelativeTime(timestamp) {
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 14) return "1 week ago";
+  return `${Math.floor(diffDays / 7)} weeks ago`;
+}
 
 export default function AdminDashboardPage() {
+  const data = useQuery(api.booking.fetchBookings)        
+  const cars = useQuery(api.cars.fetchCars)  
+  const [users,setUsers] = useState(null)
+      
+  useEffect(() => {
+    const fetchUsers = async () => {
+      await fetch('/api/users')
+      .then((res) => res.json())
+      .then(data => {        
+        setUsers(data.data)
+      })
+      
+    }
+    fetchUsers()
+  },[])
+  
+  if (data == undefined || users == null || cars == null ) return null
+  const joinedData = data.map(booking => {
+      const user = users.find(u => u.id === booking.userId);
+      return {
+        ...booking,
+        username:user.firstName,
+        userImg:user.imageUrl
+      };
+  });
+  
+  const totalRevenue = joinedData.reduce((sum, booking) => {
+    return sum + (booking.car?.price || 0);
+  }, 0);
+
+  const now = new Date();
+
+  const activeBookings = joinedData.filter(booking => {
+    return new Date(booking.endDate) >= now;
+  });
+
+  const bookingsWithRelativeTime = joinedData.map(booking => ({
+    ...booking,
+    createdAtRelative: formatRelativeTime(booking._creationTime)
+}));
+
+  const activeCount = activeBookings.length;
   return (
     <DashboardLayout isAdmin={true}>
       <div className="grid gap-4 md:gap-8">
@@ -19,7 +79,7 @@ export default function AdminDashboardPage() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
+              <div className="text-2xl font-bold">KES {totalRevenue}</div>
               <p className="text-xs text-muted-foreground">+20.1% from last month</p>
             </CardContent>
           </Card>
@@ -29,7 +89,7 @@ export default function AdminDashboardPage() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12</div>
+              <div className="text-2xl font-bold">{activeCount}</div>
               <p className="text-xs text-muted-foreground">+19% from last month</p>
             </CardContent>
           </Card>
@@ -39,7 +99,7 @@ export default function AdminDashboardPage() {
               <Car className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              <div className="text-2xl font-bold">{cars.length}</div>
               <p className="text-xs text-muted-foreground">+2 new cars this month</p>
             </CardContent>
           </Card>
@@ -49,23 +109,23 @@ export default function AdminDashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">573</div>
+              <div className="text-2xl font-bold">{users.length}</div>
               <p className="text-xs text-muted-foreground">+201 since last month</p>
             </CardContent>
           </Card>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
+          {/* <Card className="col-span-4">
             <CardHeader>
               <CardTitle>Revenue Overview</CardTitle>
             </CardHeader>
             <CardContent className="pl-2">
               <div className="h-[300px] flex items-center justify-center bg-muted/20 rounded-md">
-                <BarChart className="h-8 w-8 text-muted-foreground" />
+                <RevenueChart/>
                 <span className="ml-2 text-muted-foreground">Revenue chart will appear here</span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
           <Card className="col-span-3">
             <CardHeader>
               <CardTitle>Recent Bookings</CardTitle>
@@ -73,18 +133,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center">
+                {bookingsWithRelativeTime.map((d) => (
+                  <div key={d._id} className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mr-3">
                       <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">User #{i} booked a car</p>
+                      <p className="text-sm font-medium leading-none">{d.username} booked a car</p>
                       <p className="text-sm text-muted-foreground">
-                        {i} hour{i !== 1 ? "s" : ""} ago
+                        {d.createdAtRelative}
                       </p>
                     </div>
-                    <div className="ml-auto font-medium">+${i * 100}</div>
+                    <div className="ml-auto font-medium">+Kes {d.car.price}</div>
                   </div>
                 ))}
               </div>

@@ -87,11 +87,8 @@ export default function AdminCarsPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/cars/${car._id}`}>Edit</Link>
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
+                          <Link href={`/admin/cars/edit/${car._id}`}>Edit</Link>
+                        </Button>                        
                       </div>
                     </TableCell>
                   </TableRow>

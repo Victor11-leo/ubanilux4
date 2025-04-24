@@ -12,7 +12,7 @@ export default defineSchema({
         v.literal("rented"),
         v.literal("maintenance"),
     ),
-    image: v.union(v.id("_storage"),v.string()),
+    image: v.optional(v.union(v.id("_storage"),v.string())),
     year: v.number(),
     mileage: v.number(),
     fuelType: v.string(),
@@ -21,14 +21,8 @@ export default defineSchema({
     doors: v.optional(v.number()),
     features: v.optional(v.array(v.string())),
     description: v.string(),
-    images: v.array(v.union(v.id("_storage"),v.string())),
-  }),
-  users: defineTable({
-    name: v.string(),
-    email: v.string(),
-    phone: v.optional(v.string()),
-    image: v.optional(v.string()),
-  }),
+    images: v.optional(v.array(v.union(v.id("_storage"),v.string()))),
+  }),  
   bookings: defineTable({
     userId: v.string(),
     carId: v.id("cars"),
@@ -46,5 +40,5 @@ export default defineSchema({
         v.literal("failed"),
     ),
     paymentRef: v.optional(v.string()),
-  }),
+  }).index("by_userId",['userId']),
 });

@@ -38,17 +38,28 @@ export const createBooking = mutation({
 });
 
 export const fetchBookings = query({
-  args: {},
+  args: {
+
+  },
   handler: async (ctx, args) => {
     const bookings = await ctx.db
     .query("bookings")
+    .order("desc")
     .collect()
 
-    return bookings
+    return Promise.all(
+      bookings.map(async (booking) => {
+        const car = await ctx.db.get(booking.carId);
+        return {
+          ...booking,
+          car
+        };
+      })
+    );
   },
 });
 
-export const fetchBookingId = mutation({
+export const fetchBookingId = query({
     args: {
         id:v.id("bookings")
     },
@@ -62,33 +73,43 @@ export const fetchBookingId = mutation({
     },
 });
 
+export const fetchBookingUserId = query({
+    args: {
+      userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+      const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_userId",(q) => q.eq("userId",args.userId))
+      .order("desc")
+      .collect()
+  
+      
+      return Promise.all(
+        bookings.map(async (booking) => {
+          const car = await ctx.db.get(booking.carId);
+          return {
+            ...booking,
+            car
+          };
+        })
+      );
+    },
+});
+
 export const updateBooking = mutation({
   args: {
-    id:v.id("bookings"),
-    userId: v.id("users"),
-    carId: v.id("cars"),
-    startDate: v.string(),
-    endDate: v.string(),
+    id:v.id("bookings"),    
     status: v.union(
-        v.literal("active"),
-        v.literal("upcoming"),
-        v.literal("completed"),
-        v.literal("cancelled"),
-    ),
-    paymentStatus: v.union(
-        v.literal("paid"),
-        v.literal("pending"),
-        v.literal("failed"),
-    ),
-    paymentRef: v.optional(v.string()),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("pending"),
+      v.literal("cancelled"),
+    ),    
   },
   handler: async (ctx, args) => {
-    const {id} = args
-    const bookingFound = await ctx.db
-      .query("bookings")
-      .filter((q) => q.eq(q.field("_id"),id))
-      .first()
-    await ctx.db.patch(id,{...bookingFound,...args})
+    const {id,status} = args    
+    await ctx.db.patch(id,{status})
   },
 });
 

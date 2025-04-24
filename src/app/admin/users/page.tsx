@@ -1,10 +1,24 @@
-import Link from "next/link"
+'use client'
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/global/dashboard-layout"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search } from "lucide-react"
+import { Ellipsis, Search } from "lucide-react"
+import {getAllUsers,banUser,unBanUser,updateRole} from '@/lib/users'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from "react"
+
+
 
 // Mock data for users
 const users = [
@@ -55,7 +69,22 @@ const users = [
   },
 ]
 
-export default function AdminUsersPage() {
+const AdminUsersPage = () => {
+  const [data,setData] = useState(null)
+      
+  useEffect(() => {
+    const fetchUsers = async () => {
+      await fetch('/api/users')
+      .then((res) => res.json())
+      .then(data => {        
+        setData(data)
+      })
+      
+    }
+    fetchUsers()
+  },[])
+  console.log(data);
+  if (data == undefined) return null
   return (
     <DashboardLayout isAdmin={true}>
       <div className="grid gap-4 md:gap-8">
@@ -68,7 +97,7 @@ export default function AdminUsersPage() {
         <Card>
           <CardHeader>
             <CardTitle>All Users</CardTitle>
-            <CardDescription>You have {users.length} registered users.</CardDescription>
+            <CardDescription>You have {data.data.length} registered users.</CardDescription>
             <div className="flex w-full max-w-sm items-center space-x-2">
               <Input type="search" placeholder="Search users..." className="w-full" />
               <Button type="submit" size="icon" variant="ghost">
@@ -81,7 +110,7 @@ export default function AdminUsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>Profile</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
@@ -92,35 +121,72 @@ export default function AdminUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.id}</TableCell>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.phone}</TableCell>
-                    <TableCell>{user.joinDate}</TableCell>
+                {data.data.map((user) => {
+                  const createdDate = new Date(user.createdAt)
+                  const createdDateString = createdDate.toLocaleDateString()
+                  return (
+                    <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <Avatar>
+                        <AvatarImage src={user.imageUrl} />
+                        <AvatarFallback>{user.firstName[0]}</AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>{user.firstName} {user.lastName}</TableCell>
+                    <TableCell>{user.emailAddresses[0].emailAddress}</TableCell>
+                    <TableCell>phone</TableCell>
+                    <TableCell>{createdDateString}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           user.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {user.status}
+                        {user.banned ? "Banned" : "Active"}
                       </span>
                     </TableCell>
-                    <TableCell>{user.bookings}</TableCell>
+                    <TableCell>4</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/users/${user.id}`}>View</Link>
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger>
+                            <Button variant="outline" size="sm">
+                              <Ellipsis/>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent> 
+                            {user.publicMetadata.role == 'admin' ?
+                            <DropdownMenuItem
+                            onClick={() => updateRole({
+                              user:user.id,
+                              role:'user'
+                            })}
+                            >Become user</DropdownMenuItem>
+                            :
+                            <DropdownMenuItem
+                            onClick={() => updateRole({
+                              user:user.id,
+                              role:'admin'
+                            })}
+                            >Become admin</DropdownMenuItem>
+                            }
+
+                            {user.banned == false ?
+                            <DropdownMenuItem 
+                            onClick={() => banUser(user.id)}
+                            className="bg-destructive text-white">Ban user</DropdownMenuItem>                            
+                            :
+                            <DropdownMenuItem 
+                            onClick={() => unBanUser(user.id)}
+                            className="bg-green-600 text-white">Unban user</DropdownMenuItem>                            
+                            }
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </CardContent>
@@ -130,3 +196,4 @@ export default function AdminUsersPage() {
   )
 }
 
+export default AdminUsersPage
