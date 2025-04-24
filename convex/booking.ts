@@ -4,14 +4,14 @@ import { v } from "convex/values";
 // Create a new task with the given text
 export const createBooking = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.string(),
     carId: v.id("cars"),
     startDate: v.string(),
     endDate: v.string(),
     status: v.union(
-        v.literal("active"),
-        v.literal("upcoming"),
-        v.literal("completed"),
+        v.literal("approved"),
+        v.literal("denied"),
+        v.literal("pending"),
         v.literal("cancelled"),
     ),
     paymentStatus: v.union(

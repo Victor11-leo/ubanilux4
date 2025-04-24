@@ -30,15 +30,15 @@ export default defineSchema({
     image: v.optional(v.string()),
   }),
   bookings: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     carId: v.id("cars"),
     startDate: v.string(),
     endDate: v.string(),
     status: v.union(
-        v.literal("active"),
-        v.literal("upcoming"),
-        v.literal("completed"),
-        v.literal("cancelled"),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("pending"),
+      v.literal("cancelled"),
     ),
     paymentStatus: v.union(
         v.literal("paid"),

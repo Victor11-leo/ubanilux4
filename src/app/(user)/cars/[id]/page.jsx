@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Calendar, Car, Check, CreditCard, Fuel, Gauge, Info, Phone, Settings, Users } from "lucide-react"
-import { useQuery } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../../convex/_generated/api"
 import { useParams } from "next/navigation"
 import axios from "axios"
-import { SignedIn, SignedOut } from "@clerk/nextjs"
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs"
 import { features } from "process"
 
 export default function CarDetailsPage() {
@@ -19,18 +19,38 @@ export default function CarDetailsPage() {
   const [endDate, setEndDate] = useState("")
   const [phone, setPhone] = useState("")
   const router = useParams()
+
+  const {user} = useUser()
   
   const car = useQuery(api.cars.fetchCarId,{id:router.id})
-  if (car == undefined) return null
-  console.log(car);
+  const createBooking = useMutation(api.booking.createBooking)
+
+  if (car == undefined) return null  
+
+  console.log(startDate);
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
   const handlePayment = async () => {
     const data = {
       phoneNumber:phone,
       amount:1
     }
-    const response = await axios.post("/api/initiate-payment", JSON.parse(JSON.stringify(data)))
-    
+    // await axios.post("/api/initiate-payment", JSON.parse(JSON.stringify(data)))
+    await wait(2500)
+
+    const bookingDetails = {
+      userId:user?.id,
+      carId:car?._id,
+      startDate:startDate,
+      endDate:endDate,
+      status:'upcoming',
+      paymentStatus:"paid"
+    }
+
+    const res = await createBooking(bookingDetails)
+    console.log(res);
   }
   return (
     <>
