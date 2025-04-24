@@ -1,40 +1,17 @@
-'use client'
+import React from 'react'
+import UserDashboard from './UserDashboard'
+import { currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import BookingsData from './BookingsData'
-import { useUser } from "@clerk/nextjs"
-
-export default function UserDashboardPage() {
-  // Mock data for upcoming bookings
-  const upcomingBookings = [
-    {
-      id: "BK002",
-      car: "BMW X5",
-      startDate: "2023-10-18",
-      endDate: "2023-10-25",
-      status: "Upcoming",
-      image: "/placeholder.svg?height=80&width=120",
-    },
-  ]
-  const {user} = useUser()
-  if (user == undefined) return null
-
+const page = async () => {
+  const user = await currentUser()
+  if (!user) redirect("/")  
+  if (user.publicMetadata.role == 'admin') redirect('/admin/dashboard')
   return (
     <>
-      <div className="grid gap-4 md:gap-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user.firstName}! Here's an overview of your rental activity.</p>
-          </div>
-          <Button asChild>
-            <Link href="/cars">Rent a Car</Link>
-          </Button>
-        </div>
-        <BookingsData userId={user?.id}/>
-      </div>
+    <UserDashboard/>
     </>
   )
 }
 
+export default page

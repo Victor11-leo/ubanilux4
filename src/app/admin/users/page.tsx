@@ -112,8 +112,7 @@ const AdminUsersPage = () => {
                 <TableRow>
                   <TableHead>Profile</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
+                  <TableHead>Email</TableHead>                  
                   <TableHead>Join Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Bookings</TableHead>
@@ -134,7 +133,7 @@ const AdminUsersPage = () => {
                     </TableCell>
                     <TableCell>{user.firstName} {user.lastName}</TableCell>
                     <TableCell>{user.emailAddresses[0].emailAddress}</TableCell>
-                    <TableCell>phone</TableCell>
+                    
                     <TableCell>{createdDateString}</TableCell>
                     <TableCell>
                       <span

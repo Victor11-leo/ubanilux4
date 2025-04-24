@@ -52,7 +52,7 @@ export default function UserCarsPage() {
                     className="object-cover"
                   />                  
                   <div className="absolute top-2 right-2 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-                    ${car.price}/day
+                    Kes {car.price}/day
                   </div>
                 </div>
                 <CardContent className="p-4">
