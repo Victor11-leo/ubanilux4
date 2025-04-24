@@ -9,7 +9,7 @@ import { useEffect, useState } from "react"
 
 
 function formatRelativeTime(timestamp) {
-  const now = Date.now();
+  const now = Date.now()
   const diffMs = now - timestamp;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
